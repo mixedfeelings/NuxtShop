@@ -1,82 +1,82 @@
 .carousel {
-    @apply relative pb-4  ;
+	@apply relative pb-4;
 }
 
 .carousel__viewport {
-    @apply bg-white py-8;
+	@apply bg-white py-8;
 }
 
 .carousel__item {
-    @apply flex items-center justify-center px-4 py-8  w-full h-full ;
-    min-height: 200px;
+	@apply flex items-center justify-center px-4 py-8  w-full h-full;
+	min-height: 200px;
 }
 
 .carousel__item img {
-    @apply object-contain h-full w-auto;
-    max-height: 400px;
-    box-sizing: content-box;
-
+	@apply object-contain h-full w-auto;
+	max-height: 400px;
+	box-sizing: content-box;
 }
 
 button.carousel__next,
 button.carousel__prev,
 button.carousel__pagination-button {
-    background-color: var(--global-color);
-    line-height: 1;
+	@apply shadow-lg;
+	background-color: var(--global-color);
+	line-height: 1;
 }
 
 button.carousel__pagination-button {
-    opacity: .4;
+	opacity: 0.4;
 }
 
 button.carousel__pagination-button.carousel__pagination-button--active {
-    @apply opacity-100;
+	@apply opacity-100;
 }
 
 button.carousel__next,
 button.carousel__prev {
-    @apply border border-white border-4 opacity-75;
+	@apply border border-white border-4 opacity-75;
 }
 
 button.carousel__next:hover,
 button.carousel__prev:hover {
-    @apply opacity-100;
+	@apply opacity-100 shadow-xl;
 }
 
 button.carousel__next:hover,
 button.carousel__prev:hover {
-    @apply opacity-100;
+	@apply opacity-100;
 }
 
 button.carousel__next svg,
 button.carousel__prev svg,
 button.carousel__next:hover svg,
 button.carousel__prev:hover svg {
-    fill: var(--global-text-color);
+	fill: var(--global-text-color);
 }
 
 button.carousel__next {
-    right: 5%;
+	right: 5%;
 }
 
 button.carousel__prev {
-    left: 5%;
+	left: 5%;
 }
 
 button.carousel__pagination-button {
-    background-color: var(--global-color);
+	background-color: var(--global-color);
 }
 
 .collection-slider .carousel .carousel__viewport {
-    @apply bg-transparent ;
-    padding: 0 !important;
+	@apply bg-transparent;
+	padding: 0 !important;
 }
 
 .collection-slider .carousel .carousel__item {
-    @apply p-0;
+	@apply p-0;
 }
 
 .collection-slider .carousel-prev,
 .collection-slider .carousel-next {
-    @apply p-3;
+	@apply p-3;
 }
