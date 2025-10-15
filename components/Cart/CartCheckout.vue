@@ -1,10 +1,7 @@
 <template>
-  <a
-    v-if="checkoutUrl"
-    :href="checkoutUrl"
-    class="block py-4 font-bold text-center text-white bg-black"
-    >Checkout</a
-  >
+	<a v-if="checkoutUrl" :href="checkoutUrl" class="checkout-button py-4 w-full">
+		Checkout
+	</a>
 </template>
 
 <script setup lang="ts">
