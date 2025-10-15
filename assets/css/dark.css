@@ -6,7 +6,8 @@
 .dark .modal,
 .dark .print-docs-header,
 .dark .print-docs-body,
-.dark .print-docs aside {
+.dark .print-docs aside,
+.dark section {
 	@apply bg-darkest text-natural border-darker;
 }
 

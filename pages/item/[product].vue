@@ -189,6 +189,16 @@
 					</div>
 				</div>
 			</section>
+			<section class="py-6 md:py-8 px-6 bg-white">
+				<RelatedProducts
+					:product-id="product.id"
+					:product-tags="product.tags"
+					:same-vendor="product.vendor"
+					:artist="artist"
+					:limit="4"
+					title="Related products"
+				/>
+			</section>
 		</div>
 		<div v-else></div>
 		<div v-if="error">Error</div>
