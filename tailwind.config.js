@@ -51,7 +51,7 @@ module.exports = {
 				yellow: "var(--color-yellow)",
 				natural: "var(--color-natural)",
 				white: "var(--color-white)",
-				"dark-less": "#2B2B2B",
+				"dark-less": "#363636",
 				dark: "#232323",
 				darker: "#202020",
 				darkest: "#121212",
