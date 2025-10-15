@@ -7,7 +7,7 @@
 .dark .print-docs-header,
 .dark .print-docs-body,
 .dark .print-docs aside {
-    @apply bg-darkest text-natural border-darker;
+	@apply bg-darkest text-natural border-darker;
 }
 
 .dark .cart,
@@ -18,71 +18,76 @@
 .dark aside a,
 .dark .errors-box,
 .dark .radio-button {
-    @apply border-darker;
+	@apply border-darker;
 }
 
-.dark .metafield-wrapper .ink-chip  {
-    @apply border-darkest;
+.dark .metafield-wrapper .ink-chip {
+	@apply border-darkest;
 }
 
 .dark .cart .bg-black,
 .dark .chevron-button,
 .dark .bg-natural,
 .dark .accordion-wrapper {
-    @apply bg-darker;
+	@apply bg-darker;
 }
 
 button.bg-black,
 .button.bg-black {
-    @apply text-natural bg-darkest;
+	@apply text-natural bg-darkest;
 }
 
 .dark select {
-    @apply text-natural bg-dark border-darkest;
+	@apply text-natural bg-dark-less border-darkest;
+}
+
+.dark select.form-select {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23FBF7EF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
 }
 
 .dark select .select-icon svg {
-    @apply text-natural;
+	@apply text-natural;
+	fill: currentColor;
 }
 
 .dark tr,
 .dark thead {
-    @apply border-darker;
+	@apply border-darker;
 }
 
 /* FORMS */
 
 .dark .disabled {
-    @apply opacity-30;  
+	@apply opacity-30;
 }
 
 .dark .form-item select,
 .dark .form-item textarea,
 .dark .mc-field-group input {
-    @apply bg-dark border-darker text-natural;
+	@apply bg-dark border-darker text-natural;
 }
 
 .dark .quantity-toggle input,
 .dark .mc-field-group input {
-    @apply bg-darkest;
+	@apply bg-darkest;
 }
 
 .dark .circle,
 .dark .square {
-    @apply border-natural;
+	@apply border-natural;
 }
 
 .dark .selected .circle,
 .dark .selected .square {
-    background-color: var(--color-natural);
+	background-color: var(--color-natural);
 }
 
 .dark .light-option .circle,
 .dark .light-option .square {
-    @apply border-black;
+	@apply border-black;
 }
 
 .dark .light-option.selected .circle,
 .dark .light-option.selected .square {
-    background-color: #000;
+	background-color: #000;
 }
