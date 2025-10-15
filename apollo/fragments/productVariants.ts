@@ -13,6 +13,7 @@ export const productVariants = gql`
 						altText
 						width
 						height
+						id
 					}
 					priceV2 {
 						amount

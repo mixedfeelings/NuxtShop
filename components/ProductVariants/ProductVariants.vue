@@ -33,10 +33,16 @@ const props = defineProps<{
 
 const { label, variants, defaultVariant } = toRefs(props);
 
+const emit = defineEmits<{
+	(e: "update:modelValue", value: string): void;
+}>();
+
 const productStore = useProductStore();
 
 const handleChange = (e: Event) => {
-	productStore.setSelectedVariantId((<HTMLSelectElement>e.target).value);
+	const value = (e.target as HTMLSelectElement).value;
+	productStore.setSelectedVariantId(value);
+	emit("update:modelValue", value);
 };
 
 //Add Price to variant list
