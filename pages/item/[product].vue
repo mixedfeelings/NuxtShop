@@ -2,7 +2,7 @@
 	<div class="bg-natural">
 		<div v-if="product">
 			<Html>
-				<Head v-if="product?.title && product?.description">
+				<Head>
 					<Title>{{ meta_title }} | Issue Press</Title>
 
 					<!-- Canonical & robots -->
@@ -62,6 +62,8 @@
 						name="twitter:image"
 						:content="product?.images?.edges?.[0]?.node?.url"
 					/>
+
+					<Script type="application/ld+json" :children="structuredDataJson" />
 				</Head>
 			</Html>
 			<ClientOnly>
@@ -548,6 +550,136 @@ const meta_title = computed(() => {
 	const names = [artist.value, artist2.value].filter(Boolean).join(" & ");
 	return names ? `${product.value.title} by ${names}` : product.value.title;
 });
+
+function stripHtml(html?: string | null) {
+	if (!html) return "";
+	return html
+		.replace(/<style[\s\S]*?<\/style>/gi, "")
+		.replace(/<script[\s\S]*?<\/script>/gi, "")
+		.replace(/<[^>]+>/g, "")
+		.replace(/\s+/g, " ")
+		.trim();
+}
+
+function availabilityFromVariant(v: any) {
+	// Uses Storefront fields you already fetch/plan to fetch
+	if (v?.availableForSale && (v?.quantityAvailable ?? 0) > 0) {
+		return "https://schema.org/InStock";
+	}
+	// Optional: if you use "continue selling when out of stock"
+	if (v?.availableForSale && v?.currentlyNotInStock) {
+		return "https://schema.org/BackOrder";
+	}
+	return "https://schema.org/OutOfStock";
+}
+
+function productSchemaType(productType?: string) {
+	// Your naming: “books” are called “publications”
+	if (!productType) return "Product";
+	const type = productType.toLowerCase();
+	if (
+		type.includes("publication") ||
+		type === "book" ||
+		type.includes("book")
+	) {
+		return "Book";
+	}
+	// prints, multiples → Product
+	return "Product";
+}
+
+const productUrlBase = computed(() => `https://issue.press${route.path}`);
+
+function offerUrlForVariant(variantId: string, idx: number) {
+	// Only include ?variant= if there are multiple variants
+	const edges = initialVariants.value || [];
+	if (edges.length <= 1) return productUrlBase.value;
+
+	// Use numeric form for the URL
+	const num = extractNumericId(variantId);
+	return `${productUrlBase.value}?variant=${num}`;
+}
+
+const imagesForSchema = computed(() => {
+	const arr = images.value?.map((e) => e?.node?.url).filter(Boolean) || [];
+	// Google likes up to a handful; keep them all or slice(0, 10) if you want to cap
+	return arr;
+});
+
+const offersForSchema = computed(() => {
+	const edges = initialVariants.value || [];
+	if (!edges.length) return undefined;
+
+	return edges.map((edge, idx) => {
+		const v = edge.node;
+		return {
+			"@type": "Offer",
+			url: offerUrlForVariant(v.id, idx),
+			priceCurrency:
+				v?.price?.currencyCode ||
+				product.value?.priceRange?.minVariantPrice?.currencyCode ||
+				"USD",
+			price:
+				v?.price?.amount ||
+				product.value?.priceRange?.minVariantPrice?.amount ||
+				undefined,
+			availability: availabilityFromVariant(v),
+			sku: v?.sku || undefined,
+			itemCondition: "https://schema.org/NewCondition",
+		};
+	});
+});
+
+const brandObj = computed(() => {
+	const vendor = product.value?.vendor || "Issue Press";
+	return { "@type": "Brand", name: vendor };
+});
+
+// If you have ratings later, you can add aggregateRating & review blocks
+const structuredData = computed(() => {
+	if (!product.value) return null;
+
+	const schemaType = productSchemaType(product.value.productType);
+	const name = product.value.title || "";
+	const description = stripHtml(
+		product.value.descriptionHtml || product.value.description || ""
+	);
+	const skuCurrent = variant.value?.sku || undefined;
+
+	const base = {
+		"@context": "https://schema.org",
+		"@type": schemaType,
+		name,
+		image: imagesForSchema.value,
+		description,
+		brand: brandObj.value,
+		url: productUrlBase.value,
+		sku: skuCurrent,
+		// Product-wide price range signal (optional; Offers below are the primary)
+		offers: offersForSchema.value,
+	} as any;
+
+	if (schemaType === "Book") {
+		// Map your "artist" to author
+		const authors = [artist.value, artist2.value].filter(Boolean);
+		if (authors.length) {
+			base.author = authors.map((n) => ({ "@type": "Person", name: n }));
+		}
+		// Optional: if you want to pass year → datePublished
+		if (year.value) {
+			base.datePublished = String(year.value);
+		}
+		// Optional: Book-specific fields if you have them
+		// base.bookFormat = "https://schema.org/Paperback"; // or Hardcover, EBook, etc.
+		// base.isbn = "..." // if you have one
+	}
+
+	return base;
+});
+
+const structuredDataJson = computed(() =>
+	structuredData.value ? JSON.stringify(structuredData.value, null, 2) : ""
+);
 
 // Fetch fresh inventory on client
 onMounted(() => {
