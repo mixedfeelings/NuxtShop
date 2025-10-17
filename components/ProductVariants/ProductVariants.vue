@@ -1,16 +1,17 @@
 <template>
 	<select
 		v-if="variants && variants.length > 1"
+		v-model="selectedVariant"
 		class="form-select appearance-none block pl-3 pr-8 py-1.5 text-base font-normal bg-clip-padding bg-no-repeat border border-solid border-gray-300 bg-white cursor-pointer focus:outline-none"
 		:aria-label="label"
 		@change="handleChange($event)"
 	>
-		<option selected disabled>{{ label }}</option>
+		<option disabled value="">{{ label }}</option>
 		<option
 			v-for="variant in variants"
 			:key="variant.node.id"
-			:disabled="!variant.node.availableForSale"
 			:value="variant.node.id"
+			:disabled="!variant.node.availableForSale"
 		>
 			{{ formatPrice(variant.node.priceV2.amount) }} - {{ variant.node.title }}
 			{{ !variant.node.availableForSale ? " (Sold Out)" : "" }}
@@ -28,10 +29,10 @@ import { useShopStore } from "~/stores/shop";
 const props = defineProps<{
 	label: string;
 	variants: Ref;
-	defaultVariant: string;
+	selectedVariant: string;
 }>();
 
-const { label, variants, defaultVariant } = toRefs(props);
+const { label, variants, selectedVariant } = toRefs(props);
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: string): void;
@@ -55,6 +56,6 @@ function formatPrice(price: number) {
 }
 
 onMounted(() => {
-	productStore.setSelectedVariantId(defaultVariant.value);
+	productStore.setSelectedVariantId(selectedVariant.value);
 });
 </script>

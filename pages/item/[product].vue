@@ -3,74 +3,97 @@
 		<div v-if="product">
 			<Html>
 				<Head v-if="product?.title && product?.description">
-					<Title>{{ product.title }} | Issue Press</Title>
+					<Title>{{ meta_title }} | Issue Press</Title>
+
+					<!-- Canonical & robots -->
+					<Link rel="canonical" :href="`https://issue.press${route.path}`" />
+					<Meta name="robots" content="index,follow" />
+
+					<!-- Description (consider using a trimmed plain-text version) -->
 					<Meta name="description" :content="product.description" />
-					<Meta name="twitter:card" content="summary_large_image" />
-					<Meta name="twitter:site" content="@issuepress" />
-					<Meta
-						property="twitter:image"
-						:content="product?.images.edges[0]?.node.url"
-					/>
+
+					<!-- Open Graph -->
+					<Meta property="og:type" content="product" />
+					<Meta property="og:site_name" content="Issue Press" />
 					<Meta property="og:title" :content="`${meta_title} | Issue Press`" />
-					<Meta propert="og:description" :content="product.description" />
+					<Meta property="og:description" :content="product.description" />
 					<Meta
 						property="og:url"
 						:content="`https://issue.press${route.path}`"
 					/>
-					<Meta property="og:type" content="product" />
 					<Meta
-						Propety="product:price"
+						v-if="product?.images?.edges?.[0]?.node?.url"
+						property="og:image"
+						:content="product?.images?.edges?.[0]?.node?.url"
+					/>
+					<Meta
+						v-if="product?.images?.edges?.[0]?.node?.width"
+						property="og:image:width"
+						:content="`${product?.images?.edges?.[0]?.node?.width}`"
+					/>
+					<Meta
+						v-if="product?.images?.edges?.[0]?.node?.height"
+						property="og:image:height"
+						:content="`${product?.images?.edges?.[0]?.node?.height}`"
+					/>
+					<Meta
+						v-if="product?.images?.edges?.[0]?.node?.altText"
+						property="og:image:alt"
+						:content="product?.images?.edges?.[0]?.node?.altText"
+					/>
+
+					<!-- Product price -->
+					<Meta
+						v-if="product?.priceRange?.minVariantPrice?.amount"
+						property="product:price:amount"
 						:content="product?.priceRange?.minVariantPrice?.amount"
 					/>
 					<Meta
-						property="product:price.currency"
+						v-if="product?.priceRange?.minVariantPrice?.currencyCode"
+						property="product:price:currency"
 						:content="product?.priceRange?.minVariantPrice?.currencyCode"
 					/>
+
+					<!-- Twitter -->
+					<Meta name="twitter:card" content="summary_large_image" />
+					<Meta name="twitter:site" content="@issuepress" />
 					<Meta
-						v-if="product?.images?.edges[0].node.url"
-						property="og:image"
-						:content="product?.images.edges[0]?.node.url"
-					/>
-					<Meta
-						v-if="product?.images?.edges[0].node.width"
-						property="og:image:width"
-						:content="`${product?.images.edges[0]?.node.width}`"
-					/>
-					<Meta
-						v-if="product?.images?.edges[0].node.height"
-						property="og:image:height"
-						:content="`${product?.images.edges[0]?.node.height}`"
-					/>
-					<Meta
-						v-if="product?.images?.edges[0].node.altText"
-						property="og:image:alt"
-						:content="product?.images.edges[0]?.node.altText"
+						v-if="product?.images?.edges?.[0]?.node?.url"
+						name="twitter:image"
+						:content="product?.images?.edges?.[0]?.node?.url"
 					/>
 				</Head>
 			</Html>
+			<ClientOnly>
+				<carousel
+					ref="carouselRef"
+					v-if="show_images"
+					:settings="settings"
+					:breakpoints="breakpoints"
+					:wrap-around="true"
+				>
+					<slide
+						v-for="(image, index) in images"
+						:index="index"
+						:key="image.node.id"
+					>
+						<div class="carousel__item">
+							<img
+								:src="image.node.url"
+								@click="onImageClick(index)"
+								class="cursor-pointer"
+								:alt="image.node.altText ?? `Excerpt of ${meta_title}`"
+								loading="lazy"
+								decoding="async"
+							/>
+						</div>
+					</slide>
+					<template #addons>
+						<navigation v-if="has_more_than_one_image" />
+						<pagination v-if="has_more_than_one_image" />
+					</template> </carousel
+			></ClientOnly>
 
-			<carousel
-				ref="carouselRef"
-				v-if="show_images"
-				:settings="settings"
-				:breakpoints="breakpoints"
-				:wrap-around="true"
-			>
-				<slide v-for="(image, index) in images" :index="index" :key="index">
-					<div class="carousel__item">
-						<img
-							:src="image.node.url"
-							@click="onImageClick(index)"
-							class="cursor-pointer"
-							:alt="image.node.altText ?? `Excerpt of ${meta_title}`"
-						/>
-					</div>
-				</slide>
-				<template #addons>
-					<navigation v-if="has_more_than_one_image" />
-					<pagination v-if="has_more_than_one_image" />
-				</template>
-			</carousel>
 			<section class="py-6 md:py-8 px-6 bg-natural">
 				<div class="container mx-auto">
 					<div v-if="sku" v-text="sku" class="pb-2"></div>
@@ -85,8 +108,8 @@
 						<NuxtLink :to="`/artists/${formatText(artist)}`">{{
 							artist
 						}}</NuxtLink>
-						<span v-if="artist2"
-							>&
+						<span v-if="artist2">
+							&
 							<NuxtLink :to="`/artists/${formatText(artist2)}`">{{
 								artist2
 							}}</NuxtLink>
@@ -102,7 +125,7 @@
 							v-model="selected_variant"
 							label="Select option"
 							:variants="variants"
-							:default-variant="default_variant"
+							:selectedVariant="selected_variant"
 						></ProductVariants>
 						<ProductAddToCart :label="button_label"></ProductAddToCart>
 					</div>
@@ -196,7 +219,7 @@
 					:same-vendor="product.vendor"
 					:artist="artist"
 					:limit="4"
-					title="Related products"
+					title="Related Works"
 				/>
 			</section>
 		</div>
@@ -211,24 +234,28 @@
 			>
 				<CloseIcon class="close-icon w-6" aria-hidden />
 			</button>
-			<carousel v-if="show_images" ref="myCarousel" :wrap-around="true">
-				<slide
-					v-for="(image, index) in images"
-					:index="index"
-					:key="image.node.id"
-				>
-					<div class="p-6">
-						<img
-							:src="image.node.url"
-							style="max-height: 90vh"
-							:alt="image.node.altText ?? `Excerpt of ${meta_title}`"
-						/>
-					</div>
-				</slide>
-				<template #addons>
-					<navigation v-if="has_more_than_one_image"></navigation>
-				</template>
-			</carousel>
+			<ClientOnly>
+				<carousel v-if="show_images" ref="myCarousel" :wrap-around="true">
+					<slide
+						v-for="(image, index) in images"
+						:index="index"
+						:key="image.node.id"
+					>
+						<div class="p-6">
+							<img
+								:src="image.node.url"
+								style="max-height: 90vh"
+								:alt="image.node.altText ?? `Excerpt of ${meta_title}`"
+								loading="lazy"
+								decoding="async"
+							/>
+						</div>
+					</slide>
+					<template #addons>
+						<navigation v-if="has_more_than_one_image"></navigation>
+					</template>
+				</carousel>
+			</ClientOnly>
 		</div>
 	</div>
 </template>
@@ -314,7 +341,7 @@ function toEdgesArray<T = any>(x: any): T[] {
 //METADATA
 const artist = computed(() => product.value.artist?.value ?? "");
 const artist2 = computed(() => product.value.artist2?.value ?? "");
-const sku = computed(() => product.value?.variants?.edges[0]?.node?.sku ?? "");
+const sku = computed(() => variant.value?.sku ?? "");
 const inkColors = computed(() =>
 	product.value.inkColors ? JSON.parse(product.value.inkColors.value) : ""
 );
@@ -355,14 +382,12 @@ const srcset = computed(() => getSrcset(src.value || ""));
 
 const show_images = computed(() => product.value.images?.edges.length > 0);
 const has_more_than_one_image = computed(
-	() => product.value.images?.edges.length > 2
+	() => product.value.images?.edges.length > 1
 );
 
 const imageIndexById = computed(() => {
 	const map = new Map<string, number>();
-	images.value.forEach((edge, i) => {
-		if (edge?.node?.id) map.set(edge.node.id, i);
-	});
+	images.value?.forEach((e, i) => e?.node?.id && map.set(e.node.id, i));
 	return map;
 });
 
@@ -373,22 +398,13 @@ function slideToVariantImage(variantId: string) {
 
 	const idx = imageIndexById.value.get(imageId);
 	if (idx == null) return;
-
-	// use vue3-carousel's slideTo(index, skipTransition)
 	nextTick(() => {
 		carouselRef.value?.slideTo(idx, false);
 	});
 }
 
 const default_variant = computed(() => {
-	if (
-		product.value.variants?.edges.length > 1 ||
-		!product.value.availableForSale
-	) {
-		return "";
-	} else {
-		return product.value?.variants?.edges[0]?.node?.id;
-	}
+	return product.value?.variants?.edges?.[0]?.node?.id || "";
 });
 
 const button_label = computed(() => {
@@ -399,15 +415,87 @@ const button_label = computed(() => {
 	}
 });
 
-function onImageClick(i: number) {
-	this.toggleModal();
-	nextTick(() => {
-		this.myCarousel.slideTo(i);
-	});
+const variant = computed(() => {
+	// If variants haven't loaded yet, bail early
+	if (!initialVariants.value?.length) return null;
+
+	// Figure out which ID we should be looking for
+	const idToFind = selected_variant.value || default_variant.value;
+	if (!idToFind) return null;
+
+	// Find the matching variant edge
+	const edge = initialVariants.value.find((v) => v.node.id === idToFind);
+	return edge ? edge.node : null;
+});
+
+// Variant Routes
+
+function extractNumericId(gid: string | undefined | null) {
+	if (!gid) return null;
+	return gid.split("/").pop(); // "gid://shopify/ProductVariant/43918047297588" → "43918047297588"
 }
 
+function toShopifyGid(num: string | undefined | null) {
+	if (!num) return null;
+	return `gid://shopify/ProductVariant/${num}`;
+}
+const router = useRouter();
+
+function findVariantByIdOrHandle(v: string) {
+	if (!v || !initialVariants.value?.length) return null;
+	// try by id (gid)
+	let edge = initialVariants.value.find((e) => e?.node?.id === v);
+	if (edge) return edge.node;
+	// fallback: some sites prefer the "handle" / selectedOptions
+	edge = initialVariants.value.find((e) => e?.node?.handle === v);
+	return edge ? edge.node : null;
+}
+
+function setSelectedFromRoute() {
+	const raw = route.query.variant;
+	if (!raw) return;
+
+	// Convert numeric route param back to full GID
+	const fullId = toShopifyGid(Array.isArray(raw) ? raw[0] : raw);
+	const match = initialVariants.value.find((v) => v.node.id === fullId);
+	if (match) selected_variant.value = match.node.id;
+}
+
+watch(
+	() => initialVariants.value,
+	(v) => {
+		if (v?.length) setSelectedFromRoute();
+	},
+	{ immediate: true }
+);
+
+watch(
+	selected_variant,
+	(newId) => {
+		if (!newId) return;
+		slideToVariantImage(newId);
+
+		const numeric = extractNumericId(newId);
+		router.replace({
+			query: { ...route.query, variant: numeric },
+		});
+	},
+	{ immediate: true }
+);
+
+watch(
+	() => route.query.variant,
+	() => setSelectedFromRoute()
+);
+
+function onImageClick(i) {
+	toggleModal();
+	nextTick(() => {
+		myCarousel.value?.slideTo(i);
+	});
+}
 function toggleModal() {
-	this.show_modal = !this.show_modal;
+	show_modal.value = !show_modal.value;
 }
 
 watch(
@@ -420,18 +508,15 @@ watch(
 
 // SEO
 const meta_title = computed(() => {
-	let tc = product?.value.title;
-	if (artist.value) {
-		tc += ` by ${artist.value}`;
-	} else if (artist2.value) {
-		tc += ` & ${artist2.value}`;
-	}
-	return tc;
+	if (!product.value?.title) return "";
+	const names = [artist.value, artist2.value].filter(Boolean).join(" & ");
+	return names ? `${product.value.title} by ${names}` : product.value.title;
 });
 
 // Fetch fresh inventory on client
 onMounted(() => {
-	const { result: clientResult, onResult } = useQuery(
+	// refresh variants from network
+	const { result: clientResult } = useQuery(
 		productVariantsByHandle,
 		{ handle },
 		{ fetchPolicy: "network-only" }
@@ -439,9 +524,43 @@ onMounted(() => {
 	const clientVariants = useResult(
 		clientResult,
 		[],
-		(data) => data.productByHandle.variants.edges
+		(d) => d.productByHandle.variants.edges
 	);
-	variants.value = clientVariants;
+	watch(clientVariants, (v) => {
+		initialVariants.value = v;
+	});
+
+	// ---- selection init logic (URL > single > none) ----
+	function toShopifyGid(num?: string | null) {
+		return num ? `gid://shopify/ProductVariant/${num}` : null;
+	}
+
+	watch(
+		[initialVariants, () => route.query.variant],
+		([list, q]) => {
+			if (!list?.length) return;
+
+			// 1) URL ?variant=439180... (numeric) → convert to GID and validate
+			const raw = Array.isArray(q) ? q?.[0] : q;
+			const gid = raw ? toShopifyGid(String(raw)) : null;
+			const fromUrl = gid ? list.find((e) => e.node.id === gid)?.node : null;
+			if (fromUrl) {
+				selected_variant.value = fromUrl.id;
+				return;
+			}
+
+			// 2) Exactly one variant? auto-select it
+			if (list.length === 1) {
+				selected_variant.value = list[0].node.id;
+				return;
+			}
+
+			// 3) Otherwise, force placeholder (label) to show
+			selected_variant.value = ""; // IMPORTANT: '' so <option value=""> shows
+		},
+		{ immediate: true }
+	);
+	// ----------------------------------------------------
 
 	colorStore.setGlobalColor();
 	document.documentElement.style.setProperty(
