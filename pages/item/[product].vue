@@ -63,7 +63,7 @@
 						:content="product?.images?.edges?.[0]?.node?.url"
 					/>
 
-					<Script type="application/ld+json" :children="structuredDataJson" />
+					<!-- <Script type="application/ld+json" :children="structuredDataJson" /> -->
 				</Head>
 			</Html>
 			<ClientOnly>
@@ -93,8 +93,9 @@
 					<template #addons>
 						<navigation v-if="has_more_than_one_image" />
 						<pagination v-if="has_more_than_one_image" />
-					</template> </carousel
-			></ClientOnly>
+					</template>
+				</carousel>
+			</ClientOnly>
 
 			<section class="py-6 md:py-8 px-6 bg-natural">
 				<div class="container mx-auto">
@@ -104,7 +105,7 @@
 						:title="product.title"
 						variant="product"
 						class="text-2xl md:text-3xl lg:text-4xl font-serif tracking-wide mb-2"
-					></ProductTitle>
+					/>
 					<div v-if="artist" class="artist text-base md:text-lg my-1 font-mono">
 						by
 						<NuxtLink :to="`/artists/${formatText(artist)}`">{{
@@ -122,24 +123,24 @@
 						<ProductPrice
 							:priceRange="product.priceRange"
 							:compareAtPriceRange="product.compareAtPriceRange"
-						></ProductPrice>
+						/>
 						<ProductVariants
 							v-model="selected_variant"
 							label="Select option"
 							:variants="variants"
 							:selectedVariant="selected_variant"
-							@update:modelValue="onUserVariantSelect"
-						></ProductVariants>
-						<ProductAddToCart :label="button_label"></ProductAddToCart>
+							@update:model-value="onUserVariantSelect"
+						/>
+						<ProductAddToCart :label="button_label" />
 					</div>
 
-					<div :class="stock.class" v-html="stock.message"></div>
+					<div v-if="stock" :class="stock.class" v-html="stock.message"></div>
 
 					<div class="text-base md:text-2xl pt-6">
 						<ProductDescription
 							:description="product.descriptionHtml"
 							class="product-description"
-						></ProductDescription>
+						/>
 						<div
 							class="metadata pt-6 font-mono whitespace-pre-wrap text-base gap-y-2"
 						>
@@ -148,8 +149,8 @@
 							</div>
 
 							<div class="metafield-wrapper">
-								<span class="metafield-label">Type: </span
-								><NuxtLink
+								<span class="metafield-label">Type: </span>
+								<NuxtLink
 									class="underline"
 									:to="`/collections/${formatText(product.productType)}s`"
 									>{{ product.productType }}</NuxtLink
@@ -196,7 +197,7 @@
 											color
 										)});`"
 										v-text="color"
-									></NuxtLink>
+									/>
 								</div>
 							</div>
 
@@ -266,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, onMounted, computed } from "vue";
 import CloseIcon from "@heroicons/vue/solid/XIcon.js";
 import { useQuery, useResult } from "@vue/apollo-composable";
 import { breakpointsTailwind } from "@vueuse/core";
@@ -295,10 +296,8 @@ function lod(color: string) {
 		case "Purple":
 		case "Light Gray":
 			return "dark-option";
-			break;
 		default:
 			return "light-option";
-			break;
 	}
 }
 
@@ -309,24 +308,19 @@ const userSelectedVariant = ref(false);
 function onUserVariantSelect() {
 	userSelectedVariant.value = true;
 }
+const routeChangeGuard = ref(false);
 
-const settings = ref({
-	itemsToShow: 1,
-});
+const settings = ref({ itemsToShow: 1 });
 
 const breakpoints = ref({
-	700: {
-		itemsToShow: 1.5,
-	},
-	// 1024 and up
-	1024: {
-		itemsToShow: 2.5,
-	},
+	700: { itemsToShow: 1.5 },
+	1024: { itemsToShow: 2.5 },
 });
 
 const colorStore = useColorStore();
 const route = useRoute();
-const handle = route.params.product;
+const router = useRouter();
+const handle = route.params.product as string;
 
 // Get product data
 const { result, error } = useQuery(productByHandle, { handle });
@@ -342,42 +336,45 @@ const images = computed(() => toEdgesArray(product.value?.images));
 const carouselRef = ref(null);
 
 function toEdgesArray<T = any>(x: any): T[] {
-	if (Array.isArray(x)) return x; // already edges[]
-	if (Array.isArray(x?.edges)) return x.edges; // got connection
+	if (Array.isArray(x)) return x;
+	if (Array.isArray(x?.edges)) return x.edges;
 	return [];
 }
 
-//METADATA
-const artist = computed(() => product.value.artist?.value ?? "");
-const artist2 = computed(() => product.value.artist2?.value ?? "");
+// METADATA
+const artist = computed(() => product.value?.artist?.value ?? "");
+const artist2 = computed(() => product.value?.artist2?.value ?? "");
 const sku = computed(() => variant.value?.sku ?? "");
 const inkColors = computed(() =>
-	product.value.inkColors ? JSON.parse(product.value.inkColors.value) : ""
+	product.value?.inkColors ? JSON.parse(product.value.inkColors.value) : ""
 );
 const papers = computed(() =>
-	product.value.papers ? JSON.parse(product.value.papers.value) : ""
+	product.value?.papers ? JSON.parse(product.value.papers.value) : ""
 );
 const binding = computed(() =>
-	product.value.binding ? JSON.parse(product.value.binding.value) : ""
+	product.value?.binding ? JSON.parse(product.value.binding.value) : ""
 );
 const process = computed(() =>
-	product.value.process ? JSON.parse(product.value.process.value) : ""
+	product.value?.process ? JSON.parse(product.value.process.value) : ""
 );
 const dimensions = computed(() =>
-	product.value.dimensions ? product.value.dimensions.value : ""
+	product.value?.dimensions ? product.value.dimensions.value : ""
 );
 const pages = computed(() =>
-	product.value.pages ? product.value.pages.value : ""
+	product.value?.pages ? product.value.pages.value : ""
 );
 const editionSize = computed(() =>
-	product.value.edition_size ? JSON.parse(product.value.edition_size.value) : ""
+	product.value?.edition_size
+		? JSON.parse(product.value.edition_size.value)
+		: ""
 );
 const cover = computed(() =>
-	product.value.cover ? product.value.cover.value : ""
+	product.value?.cover ? product.value.cover.value : ""
 );
+
+// Stock object (orange for low stock)
 const stock = computed(() => {
 	const qty = variant.value?.quantityAvailable ?? 0;
-
 	if (qty > 9) {
 		return {
 			message: "In Stock",
@@ -386,29 +383,31 @@ const stock = computed(() => {
 	} else if (qty > 0) {
 		return {
 			message: `Only <span class="font-medium">${qty}</span> left in stock`,
-			class: "stock pt-6 text-sm font-medium text-red",
+			class: "stock pt-6 text-sm font-medium text-orange",
 		};
 	} else {
-		return null; // no message or class when sold out
+		return null; // no message/class when sold out
 	}
 });
 
 const year = computed(() => {
-	if (product.value.date?.value) {
-		const date = new Date(`${product.value.date?.value}`);
+	if (product.value?.date?.value) {
+		const date = new Date(`${product.value.date.value}`);
 		return date.getUTCFullYear();
 	}
 });
-const metadata = computed(() => product.value.metadata?.value ?? "");
+const metadata = computed(() => product.value?.metadata?.value ?? "");
 
 // Product Image
-const src = computed(() => product.value.images?.edges[0]?.node?.url ?? "");
+const src = computed(() => product.value?.images?.edges?.[0]?.node?.url ?? "");
 const sizes = `(max-width: ${breakpointsTailwind.md}px) 95vw, 40vw`;
 const srcset = computed(() => getSrcset(src.value || ""));
 
-const show_images = computed(() => product.value.images?.edges.length > 0);
+const show_images = computed(
+	() => (product.value?.images?.edges?.length ?? 0) > 0
+);
 const has_more_than_one_image = computed(
-	() => product.value.images?.edges.length > 1
+	() => (product.value?.images?.edges?.length ?? 0) > 1
 );
 
 const imageIndexById = computed(() => {
@@ -418,61 +417,46 @@ const imageIndexById = computed(() => {
 });
 
 function slideToVariantImage(variantId: string) {
-	const variant = variants.value.find((v) => v.node.id === variantId)?.node;
-	const imageId = variant?.image?.id;
-	if (!imageId) return; // variant might not have an image
-
+	const v = variants.value.find((e) => e.node.id === variantId)?.node;
+	const imageId = v?.image?.id;
+	if (!imageId) return;
 	const idx = imageIndexById.value.get(imageId);
 	if (idx == null) return;
 	nextTick(() => {
-		carouselRef.value?.slideTo(idx, false);
+		(carouselRef.value as any)?.slideTo(idx, false);
 	});
 }
 
-const default_variant = computed(() => {
-	return product.value?.variants?.edges?.[0]?.node?.id || "";
-});
+const default_variant = computed(
+	() => product.value?.variants?.edges?.[0]?.node?.id || ""
+);
 
-const button_label = computed(() => {
-	if (!product.value.availableForSale) {
-		return "Sold Out";
-	} else {
-		return "";
-	}
-});
+const button_label = computed(() =>
+	!product.value?.availableForSale ? "Sold Out" : ""
+);
 
 const variant = computed(() => {
-	// If variants haven't loaded yet, bail early
 	if (!initialVariants.value?.length) return null;
-
-	// Figure out which ID we should be looking for
 	const idToFind = selected_variant.value || default_variant.value;
 	if (!idToFind) return null;
-
-	// Find the matching variant edge
 	const edge = initialVariants.value.find((v) => v.node.id === idToFind);
 	return edge ? edge.node : null;
 });
 
-// Variant Routes
-
+// Variant Routes helpers
 function extractNumericId(gid: string | undefined | null) {
 	if (!gid) return null;
-	return gid.split("/").pop(); // "gid://shopify/ProductVariant/43918047297588" → "43918047297588"
+	return gid.split("/").pop();
 }
-
 function toShopifyGid(num: string | undefined | null) {
 	if (!num) return null;
 	return `gid://shopify/ProductVariant/${num}`;
 }
-const router = useRouter();
 
 function findVariantByIdOrHandle(v: string) {
 	if (!v || !initialVariants.value?.length) return null;
-	// try by id (gid)
 	let edge = initialVariants.value.find((e) => e?.node?.id === v);
 	if (edge) return edge.node;
-	// fallback: some sites prefer the "handle" / selectedOptions
 	edge = initialVariants.value.find((e) => e?.node?.handle === v);
 	return edge ? edge.node : null;
 }
@@ -481,66 +465,20 @@ function setSelectedFromRoute() {
 	const raw = route.query.variant;
 	if (!raw) return;
 
-	// Convert numeric route param back to full GID
-	const fullId = toShopifyGid(Array.isArray(raw) ? raw[0] : raw);
-	const match = initialVariants.value.find((v) => v.node.id === fullId);
-	if (match) selected_variant.value = match.node.id;
+	const str = Array.isArray(raw) ? String(raw[0]) : String(raw);
+	const gid = str.startsWith("gid://") ? str : toShopifyGid(str);
+	if (!gid) return;
+
+	const match = initialVariants.value?.find((v) => v.node.id === gid);
+	if (match) {
+		routeChangeGuard.value = true;
+		selected_variant.value = match.node.id;
+	}
 }
-
-watch(
-	() => initialVariants.value,
-	(v) => {
-		if (v?.length) setSelectedFromRoute();
-	},
-	{ immediate: true }
-);
-
-watch(
-	selected_variant,
-	(newId) => {
-		if (!newId) return;
-
-		slideToVariantImage(newId);
-
-		const hasMultiple =
-			Array.isArray(initialVariants.value) && initialVariants.value.length > 1;
-
-		if (userSelectedVariant.value && hasMultiple) {
-			const numeric = extractNumericId(newId);
-			router.replace({
-				query: { ...route.query, variant: numeric },
-			});
-		} else {
-			if (!hasMultiple && route.query?.variant) {
-				const { variant, ...rest } = route.query as Record<string, any>;
-				router.replace({ query: rest });
-			}
-		}
-		userSelectedVariant.value = false;
-	},
-	{ immediate: true }
-);
 
 watch(
 	() => route.query.variant,
-	() => setSelectedFromRoute()
-);
-
-function onImageClick(i) {
-	toggleModal();
-	nextTick(() => {
-		myCarousel.value?.slideTo(i);
-	});
-}
-function toggleModal() {
-	show_modal.value = !show_modal.value;
-}
-
-watch(
-	selected_variant,
-	(newId) => {
-		if (newId) slideToVariantImage(newId);
-	},
+	() => setSelectedFromRoute(),
 	{ immediate: true }
 );
 
@@ -562,11 +500,9 @@ function stripHtml(html?: string | null) {
 }
 
 function availabilityFromVariant(v: any) {
-	// Uses Storefront fields you already fetch/plan to fetch
 	if (v?.availableForSale && (v?.quantityAvailable ?? 0) > 0) {
 		return "https://schema.org/InStock";
 	}
-	// Optional: if you use "continue selling when out of stock"
 	if (v?.availableForSale && v?.currentlyNotInStock) {
 		return "https://schema.org/BackOrder";
 	}
@@ -574,7 +510,6 @@ function availabilityFromVariant(v: any) {
 }
 
 function productSchemaType(productType?: string) {
-	// Your naming: “books” are called “publications”
 	if (!productType) return "Product";
 	const type = productType.toLowerCase();
 	if (
@@ -584,32 +519,26 @@ function productSchemaType(productType?: string) {
 	) {
 		return "Book";
 	}
-	// prints, multiples → Product
 	return "Product";
 }
 
 const productUrlBase = computed(() => `https://issue.press${route.path}`);
 
 function offerUrlForVariant(variantId: string, idx: number) {
-	// Only include ?variant= if there are multiple variants
 	const edges = initialVariants.value || [];
 	if (edges.length <= 1) return productUrlBase.value;
-
-	// Use numeric form for the URL
 	const num = extractNumericId(variantId);
 	return `${productUrlBase.value}?variant=${num}`;
 }
 
 const imagesForSchema = computed(() => {
 	const arr = images.value?.map((e) => e?.node?.url).filter(Boolean) || [];
-	// Google likes up to a handful; keep them all or slice(0, 10) if you want to cap
 	return arr;
 });
 
 const offersForSchema = computed(() => {
 	const edges = initialVariants.value || [];
 	if (!edges.length) return undefined;
-
 	return edges.map((edge, idx) => {
 		const v = edge.node;
 		return {
@@ -635,10 +564,8 @@ const brandObj = computed(() => {
 	return { "@type": "Brand", name: vendor };
 });
 
-// If you have ratings later, you can add aggregateRating & review blocks
 const structuredData = computed(() => {
 	if (!product.value) return null;
-
 	const schemaType = productSchemaType(product.value.productType);
 	const name = product.value.title || "";
 	const description = stripHtml(
@@ -646,7 +573,7 @@ const structuredData = computed(() => {
 	);
 	const skuCurrent = variant.value?.sku || undefined;
 
-	const base = {
+	const base: any = {
 		"@context": "https://schema.org",
 		"@type": schemaType,
 		name,
@@ -655,23 +582,15 @@ const structuredData = computed(() => {
 		brand: brandObj.value,
 		url: productUrlBase.value,
 		sku: skuCurrent,
-		// Product-wide price range signal (optional; Offers below are the primary)
 		offers: offersForSchema.value,
-	} as any;
+	};
 
 	if (schemaType === "Book") {
-		// Map your "artist" to author
 		const authors = [artist.value, artist2.value].filter(Boolean);
 		if (authors.length) {
 			base.author = authors.map((n) => ({ "@type": "Person", name: n }));
 		}
-		// Optional: if you want to pass year → datePublished
-		if (year.value) {
-			base.datePublished = String(year.value);
-		}
-		// Optional: Book-specific fields if you have them
-		// base.bookFormat = "https://schema.org/Paperback"; // or Hardcover, EBook, etc.
-		// base.isbn = "..." // if you have one
+		if (year.value) base.datePublished = String(year.value);
 	}
 
 	return base;
@@ -681,9 +600,11 @@ const structuredDataJson = computed(() =>
 	structuredData.value ? JSON.stringify(structuredData.value, null, 2) : ""
 );
 
-// Fetch fresh inventory on client
+// ----------------- CLIENT-ONLY SIDE EFFECTS -----------------
 onMounted(() => {
-	// refresh variants from network
+	const isClient = import.meta.client;
+
+	// refresh variants from network (client)
 	const { result: clientResult } = useQuery(
 		productVariantsByHandle,
 		{ handle },
@@ -698,38 +619,78 @@ onMounted(() => {
 		initialVariants.value = v;
 	});
 
-	// ---- selection init logic (URL > single > none) ----
-	function toShopifyGid(num?: string | null) {
-		return num ? `gid://shopify/ProductVariant/${num}` : null;
-	}
-
+	// Selection init logic (URL > single > none)
 	watch(
 		[initialVariants, () => route.query.variant],
 		([list, q]) => {
 			if (!list?.length) return;
 
-			// 1) URL ?variant=439180... (numeric) → convert to GID and validate
+			// 1) URL variant (numeric or gid)
 			const raw = Array.isArray(q) ? q?.[0] : q;
-			const gid = raw ? toShopifyGid(String(raw)) : null;
+			const str = raw ? String(raw) : "";
+			const gid = str
+				? str.startsWith("gid://")
+					? str
+					: toShopifyGid(str)
+				: null;
 			const fromUrl = gid ? list.find((e) => e.node.id === gid)?.node : null;
 			if (fromUrl) {
 				selected_variant.value = fromUrl.id;
 				return;
 			}
 
-			// 2) Exactly one variant? auto-select it
+			// 2) Exactly one variant? select it
 			if (list.length === 1) {
 				selected_variant.value = list[0].node.id;
 				return;
 			}
 
-			// 3) Otherwise, force placeholder (label) to show
-			selected_variant.value = ""; // IMPORTANT: '' so <option value=""> shows
+			// 3) Otherwise show placeholder
+			selected_variant.value = "";
 		},
 		{ immediate: true }
 	);
-	// ----------------------------------------------------
 
+	watch(
+		selected_variant,
+		(newId) => {
+			if (!newId) return;
+
+			// always sync the image
+			slideToVariantImage(newId);
+
+			// if the change came from the route, don't write back to the route
+			if (routeChangeGuard.value) {
+				routeChangeGuard.value = false;
+				userSelectedVariant.value = false;
+				return;
+			}
+
+			const hasMultiple = (initialVariants.value?.length ?? 0) > 1;
+
+			// only add ?variant= for user-initiated changes on multi-variant products
+			if (userSelectedVariant.value && hasMultiple) {
+				const numeric = extractNumericId(newId);
+				router.replace({ query: { ...route.query, variant: numeric } });
+			} else if (!hasMultiple && route.query?.variant) {
+				// strip ?variant on single-variant products
+				const { variant, ...rest } = route.query as Record<string, any>;
+				router.replace({ query: rest });
+			}
+
+			userSelectedVariant.value = false;
+		},
+		{ immediate: true }
+	);
+
+	// If query changes client-side (paste a new URL), reflect into selection
+	watch(
+		() => route.query.variant,
+		() => setSelectedFromRoute(),
+		{ immediate: true }
+	);
+
+	// Color theme setup
 	colorStore.setGlobalColor();
 	document.documentElement.style.setProperty(
 		"--global-color",
@@ -740,4 +701,15 @@ onMounted(() => {
 		`var(--color-${colorStore.globalTextColor})`
 	);
 });
+
+// Modal helpers
+function onImageClick(i: number) {
+	toggleModal();
+	nextTick(() => {
+		(myCarousel.value as any)?.slideTo(i);
+	});
+}
+function toggleModal() {
+	show_modal.value = !show_modal.value;
+}
 </script>
