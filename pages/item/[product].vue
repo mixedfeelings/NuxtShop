@@ -126,6 +126,7 @@
 							label="Select option"
 							:variants="variants"
 							:selectedVariant="selected_variant"
+							@update:modelValue="onUserVariantSelect"
 						></ProductVariants>
 						<ProductAddToCart :label="button_label"></ProductAddToCart>
 					</div>
@@ -300,6 +301,10 @@ function lod(color: string) {
 const myCarousel = ref(null);
 const show_modal = ref(false);
 const selected_variant = ref("");
+const userSelectedVariant = ref(false);
+function onUserVariantSelect() {
+	userSelectedVariant.value = true;
+}
 
 const settings = ref({
 	itemsToShow: 1,
@@ -473,12 +478,24 @@ watch(
 	selected_variant,
 	(newId) => {
 		if (!newId) return;
+
 		slideToVariantImage(newId);
 
-		const numeric = extractNumericId(newId);
-		router.replace({
-			query: { ...route.query, variant: numeric },
-		});
+		const hasMultiple =
+			Array.isArray(initialVariants.value) && initialVariants.value.length > 1;
+
+		if (userSelectedVariant.value && hasMultiple) {
+			const numeric = extractNumericId(newId);
+			router.replace({
+				query: { ...route.query, variant: numeric },
+			});
+		} else {
+			if (!hasMultiple && route.query?.variant) {
+				const { variant, ...rest } = route.query as Record<string, any>;
+				router.replace({ query: rest });
+			}
+		}
+		userSelectedVariant.value = false;
 	},
 	{ immediate: true }
 );
