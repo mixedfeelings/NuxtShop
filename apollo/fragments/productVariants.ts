@@ -9,7 +9,7 @@ export const productVariants = gql`
 					availableForSale
 					id
 					image {
-						url: url(transform: { maxWidth: 160, maxHeight: 160 })
+						url: url(transform: { maxWidth: 1200, maxHeight: 1200 })
 						altText
 						width
 						height

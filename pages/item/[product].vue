@@ -21,24 +21,24 @@
 						:content="`https://issue.press${route.path}`"
 					/>
 					<Meta
-						v-if="product?.images?.edges?.[0]?.node?.url"
+						v-if="variant?.image?.url"
 						property="og:image"
-						:content="product?.images?.edges?.[0]?.node?.url"
+						:content="variant?.image?.url"
 					/>
 					<Meta
-						v-if="product?.images?.edges?.[0]?.node?.width"
+						v-if="variant?.image?.width"
 						property="og:image:width"
-						:content="`${product?.images?.edges?.[0]?.node?.width}`"
+						:content="`${variant?.image?.width}`"
 					/>
 					<Meta
-						v-if="product?.images?.edges?.[0]?.node?.height"
+						v-if="variant?.image?.height"
 						property="og:image:height"
-						:content="`${product?.images?.edges?.[0]?.node?.height}`"
+						:content="`${variant?.image?.height}`"
 					/>
 					<Meta
-						v-if="product?.images?.edges?.[0]?.node?.altText"
+						v-if="variant?.image?.altText"
 						property="og:image:alt"
-						:content="product?.images?.edges?.[0]?.node?.altText"
+						:content="variant?.image?.altText"
 					/>
 
 					<!-- Product price -->
@@ -57,9 +57,9 @@
 					<Meta name="twitter:card" content="summary_large_image" />
 					<Meta name="twitter:site" content="@issuepress" />
 					<Meta
-						v-if="product?.images?.edges?.[0]?.node?.url"
+						v-if="variant?.image?.url"
 						name="twitter:image"
-						:content="product?.images?.edges?.[0]?.node?.url"
+						:content="variant?.image?.url"
 					/>
 				</Head>
 			</Html>
