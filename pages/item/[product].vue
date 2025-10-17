@@ -61,8 +61,6 @@
 						name="twitter:image"
 						:content="product?.images?.edges?.[0]?.node?.url"
 					/>
-
-					<Script type="application/ld+json" :children="structuredDataJson" />
 				</Head>
 			</Html>
 			<ClientOnly>
@@ -130,7 +128,10 @@
 							:selectedVariant="selected_variant"
 							@update:model-value="onUserVariantSelect"
 						/>
-						<ProductAddToCart :label="button_label" />
+						<ProductAddToCart
+							:label="button_label"
+							:disabled="button_label === 'Sold Out'"
+						/>
 					</div>
 
 					<div v-if="stock" :class="stock.class" v-html="stock.message"></div>
@@ -508,7 +509,8 @@ function availabilityFromVariant(v: any) {
 	return "https://schema.org/OutOfStock";
 }
 
-function productSchemaType(productType?: string) {
+// Return multi-type for books so Product rich results still trigger
+function productSchemaType(productType?: string): string | string[] {
 	if (!productType) return "Product";
 	const type = productType.toLowerCase();
 	if (
@@ -516,7 +518,7 @@ function productSchemaType(productType?: string) {
 		type === "book" ||
 		type.includes("book")
 	) {
-		return "Book";
+		return ["Product", "Book"];
 	}
 	return "Product";
 }
@@ -531,15 +533,25 @@ function offerUrlForVariant(variantId: string, idx: number) {
 }
 
 const imagesForSchema = computed(() => {
-	const arr = images.value?.map((e) => e?.node?.url).filter(Boolean) || [];
+	const arr = images.value?.map((e: any) => e?.node?.url).filter(Boolean) || [];
 	return arr;
 });
+
+// Ensure price is "5.00" etc.
+function toMoney(val?: string | number) {
+	if (val == null || val === "") return undefined;
+	const n = typeof val === "string" ? parseFloat(val) : val;
+	if (Number.isNaN(n)) return undefined;
+	return n.toFixed(2);
+}
 
 const offersForSchema = computed(() => {
 	const edges = initialVariants.value || [];
 	if (!edges.length) return undefined;
-	return edges.map((edge, idx) => {
+
+	return edges.map((edge: any, idx: number) => {
 		const v = edge.node;
+
 		return {
 			"@type": "Offer",
 			url: offerUrlForVariant(v.id, idx),
@@ -547,15 +559,39 @@ const offersForSchema = computed(() => {
 				v?.price?.currencyCode ||
 				product.value?.priceRange?.minVariantPrice?.currencyCode ||
 				"USD",
-			price:
-				v?.price?.amount ||
-				product.value?.priceRange?.minVariantPrice?.amount ||
-				undefined,
+			price: toMoney(
+				v?.price?.amount ?? product.value?.priceRange?.minVariantPrice?.amount
+			),
 			availability: availabilityFromVariant(v),
 			sku: v?.sku || undefined,
 			itemCondition: "https://schema.org/NewCondition",
 		};
 	});
+});
+
+// Optional but recommended: show range + keep individual offers
+const aggregateOffer = computed(() => {
+	const edges = initialVariants.value || [];
+	if (!edges.length) return undefined;
+
+	const prices: number[] = edges
+		.map((e: any) => parseFloat(e?.node?.price?.amount ?? ""))
+		.filter((n) => !Number.isNaN(n));
+
+	if (!prices.length) return undefined;
+
+	const low = Math.min(...prices);
+	const high = Math.max(...prices);
+
+	return {
+		"@type": "AggregateOffer",
+		priceCurrency:
+			product.value?.priceRange?.minVariantPrice?.currencyCode || "USD",
+		lowPrice: toMoney(low),
+		highPrice: toMoney(high),
+		offerCount: edges.length,
+		offers: offersForSchema.value,
+	};
 });
 
 const brandObj = computed(() => {
@@ -565,12 +601,12 @@ const brandObj = computed(() => {
 
 const structuredData = computed(() => {
 	if (!product.value) return null;
+
 	const schemaType = productSchemaType(product.value.productType);
 	const name = product.value.title || "";
 	const description = stripHtml(
 		product.value.descriptionHtml || product.value.description || ""
 	);
-	const skuCurrent = variant.value?.sku || undefined;
 
 	const base: any = {
 		"@context": "https://schema.org",
@@ -580,16 +616,26 @@ const structuredData = computed(() => {
 		description,
 		brand: brandObj.value,
 		url: productUrlBase.value,
-		sku: skuCurrent,
-		offers: offersForSchema.value,
+		// Intentionally omit top-level sku (keeps per-variant SKUs authoritative)
+		offers: aggregateOffer.value || offersForSchema.value,
 	};
 
-	if (schemaType === "Book") {
+	// Book-specific fields (still valid when multi-type ["Product","Book"])
+	const isBook = Array.isArray(schemaType)
+		? schemaType.includes("Book")
+		: schemaType === "Book";
+
+	if (isBook) {
 		const authors = [artist.value, artist2.value].filter(Boolean);
 		if (authors.length) {
-			base.author = authors.map((n) => ({ "@type": "Person", name: n }));
+			base.author = authors.map((n: string) => ({
+				"@type": "Person",
+				name: n,
+			}));
 		}
 		if (year.value) base.datePublished = String(year.value);
+		// If you ever have one:
+		// base.isbn = product.value?.isbn || undefined;
 	}
 
 	return base;
@@ -598,6 +644,15 @@ const structuredData = computed(() => {
 const structuredDataJson = computed(() =>
 	structuredData.value ? JSON.stringify(structuredData.value, null, 2) : ""
 );
+
+useMeta({
+	script: [
+		{
+			type: "application/ld+json",
+			children: structuredDataJson,
+		},
+	],
+});
 
 onMounted(() => {
 	const isClient = import.meta.client;

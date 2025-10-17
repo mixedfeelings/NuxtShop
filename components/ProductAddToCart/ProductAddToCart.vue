@@ -2,7 +2,7 @@
 	<button
 		@click="addToCart"
 		@keyup.enter="addToCart"
-		:disabled="!selectedVariantId"
+		:disabled="!selectedVariantId || disabled"
 		class="add-to-cart-button p-4 disabled:opacity-50 disabled:cursor-not-allowed"
 		:class="button_class"
 	>
@@ -16,6 +16,7 @@ import { useCartStore } from "~/stores/cart";
 
 const props = defineProps<{
 	label?: string;
+	disabled?: boolean;
 }>();
 
 const { label } = toRefs(props);
@@ -42,7 +43,7 @@ const addToCart = () => {
 };
 
 const button_class = computed(() =>
-	selectedVariantId.value != "" ? "not-disabled" : "disabled"
+	selectedVariantId.value === "" || props.disabled ? "disabled" : "not-disabled"
 );
 </script>
 
