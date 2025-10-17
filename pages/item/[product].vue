@@ -131,6 +131,12 @@
 						<ProductAddToCart :label="button_label"></ProductAddToCart>
 					</div>
 
+					<div
+						class="text-xs pt-6 font-mono"
+						:class="stock.class"
+						v-html="stock.message"
+					></div>
+
 					<div class="text-base md:text-2xl pt-6">
 						<ProductDescription
 							:description="product.descriptionHtml"
@@ -371,6 +377,23 @@ const editionSize = computed(() =>
 const cover = computed(() =>
 	product.value.cover ? product.value.cover.value : ""
 );
+const stock = computed(() => {
+	const qty = variant.value?.quantityAvailable ?? 0;
+
+	if (qty > 10) {
+		return {
+			message: "In Stock",
+			class: "text-green",
+		};
+	} else if (qty > 0) {
+		return {
+			message: `Only <span class="font-medium">${qty}</span> left in stock`,
+			class: "text-red",
+		};
+	} else {
+		return null; // no message or class when sold out
+	}
+});
 
 const year = computed(() => {
 	if (product.value.date?.value) {
