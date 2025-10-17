@@ -9,7 +9,6 @@
 					<Link rel="canonical" :href="`https://issue.press${route.path}`" />
 					<Meta name="robots" content="index,follow" />
 
-					<!-- Description (consider using a trimmed plain-text version) -->
 					<Meta name="description" :content="product.description" />
 
 					<!-- Open Graph -->
@@ -63,7 +62,7 @@
 						:content="product?.images?.edges?.[0]?.node?.url"
 					/>
 
-					<!-- <Script type="application/ld+json" :children="structuredDataJson" /> -->
+					<Script type="application/ld+json" :children="structuredDataJson" />
 				</Head>
 			</Html>
 			<ClientOnly>
@@ -600,11 +599,9 @@ const structuredDataJson = computed(() =>
 	structuredData.value ? JSON.stringify(structuredData.value, null, 2) : ""
 );
 
-// ----------------- CLIENT-ONLY SIDE EFFECTS -----------------
 onMounted(() => {
 	const isClient = import.meta.client;
 
-	// refresh variants from network (client)
 	const { result: clientResult } = useQuery(
 		productVariantsByHandle,
 		{ handle },
@@ -618,14 +615,11 @@ onMounted(() => {
 	watch(clientVariants, (v) => {
 		initialVariants.value = v;
 	});
-
-	// Selection init logic (URL > single > none)
 	watch(
 		[initialVariants, () => route.query.variant],
 		([list, q]) => {
 			if (!list?.length) return;
 
-			// 1) URL variant (numeric or gid)
 			const raw = Array.isArray(q) ? q?.[0] : q;
 			const str = raw ? String(raw) : "";
 			const gid = str
@@ -638,14 +632,10 @@ onMounted(() => {
 				selected_variant.value = fromUrl.id;
 				return;
 			}
-
-			// 2) Exactly one variant? select it
 			if (list.length === 1) {
 				selected_variant.value = list[0].node.id;
 				return;
 			}
-
-			// 3) Otherwise show placeholder
 			selected_variant.value = "";
 		},
 		{ immediate: true }
@@ -683,7 +673,6 @@ onMounted(() => {
 		{ immediate: true }
 	);
 
-	// If query changes client-side (paste a new URL), reflect into selection
 	watch(
 		() => route.query.variant,
 		() => setSelectedFromRoute(),
