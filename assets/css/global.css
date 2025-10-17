@@ -1,91 +1,92 @@
-@import 'animations';
-@import 'cards';
-@import 'collections';
-@import 'tables';
-@import 'carousel';
-@import 'forms';
-@import 'accordions';
+@import "animations";
+@import "cards";
+@import "collections";
+@import "tables";
+@import "carousel";
+@import "forms";
+@import "accordions";
+@import "products";
 
 /* Dark Mode */
-@import 'dark';
-
+@import "dark";
 
 html {
-  text-rendering: optimizeLegibility;
-  -moz-osx-font-smoothing: grayscale; 
+	text-rendering: optimizeLegibility;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 /* Forms */
 .form-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-size: 16px 12px;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+	background-position: right 0.75rem center;
+	background-size: 16px 12px;
 }
 
 /* LINKS */
 p a,
 .artist a {
-  @apply underline;
+	@apply underline;
 }
 
 p a:hover,
 a:hover {
-  color: var(--global-color);
+	color: var(--global-color);
 }
 
 button:hover svg,
 a:hover svg {
-  fill: var(--global-color);
+	fill: var(--global-color);
 }
 
 /* Paragraph */
 
-p { @apply pb-4;}
-
-p:last-child {
-  @apply pb-0;
+p {
+	@apply pb-4;
 }
 
+p:last-child {
+	@apply pb-0;
+}
 
 body,
 .header,
 button {
-  transition: background-color .3s;
+	transition: background-color 0.3s;
 }
 .desktop-only {
-  @apply hidden;
+	@apply hidden;
 }
 
 .container {
-  max-width: 1000px !important;
+	max-width: 1000px !important;
 }
 
 .modal {
-  @apply bg-white flex flex-col z-20 fixed top-0 right-0 bottom-0 left-0 items-center justify-center h-screen w-screen overflow-hidden bg-fixed;
+	@apply bg-white flex flex-col z-20 fixed top-0 right-0 bottom-0 left-0 items-center justify-center h-screen w-screen overflow-hidden bg-fixed;
 }
 
 .print-docs-header {
-  @apply relative pt-6 px-6 border-b-2;
+	@apply relative pt-6 px-6 border-b-2;
 }
 
 .print-docs .print-docs-body {
-  @apply bg-transparent p-6;
+	@apply bg-transparent p-6;
 }
 
 .product-description {
-  @apply leading-relaxed;
+	@apply leading-relaxed;
 }
 
 .product-description a {
-  @apply underline;
+	@apply underline;
 }
 
 @media (min-width: 640px) {
-  .mobile-only {
-    @apply hidden;
-  }
+	.mobile-only {
+		@apply hidden;
+	}
 
-  .desktop-only {
-    display: revert;
-  }
+	.desktop-only {
+		display: revert;
+	}
 }

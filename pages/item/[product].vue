@@ -131,11 +131,7 @@
 						<ProductAddToCart :label="button_label"></ProductAddToCart>
 					</div>
 
-					<div
-						class="text-xs pt-6 font-mono"
-						:class="stock.class"
-						v-html="stock.message"
-					></div>
+					<div :class="stock.class" v-html="stock.message"></div>
 
 					<div class="text-base md:text-2xl pt-6">
 						<ProductDescription
@@ -380,15 +376,15 @@ const cover = computed(() =>
 const stock = computed(() => {
 	const qty = variant.value?.quantityAvailable ?? 0;
 
-	if (qty > 10) {
+	if (qty > 9) {
 		return {
 			message: "In Stock",
-			class: "text-green",
+			class: "stock pt-6 text-sm font-medium text-green",
 		};
 	} else if (qty > 0) {
 		return {
 			message: `Only <span class="font-medium">${qty}</span> left in stock`,
-			class: "text-red",
+			class: "stock pt-6 text-sm font-medium text-red",
 		};
 	} else {
 		return null; // no message or class when sold out
@@ -613,65 +609,3 @@ onMounted(() => {
 	);
 });
 </script>
-
-<style scoped>
-.card-image-wrapper {
-	@apply relative block w-full z-0;
-	height: 0;
-	padding-bottom: 100%;
-}
-
-.card-image-wrapper.thumbnail {
-	padding-bottom: 100%;
-}
-
-.card-image-wrapper .card-image-inner {
-	@apply flex flex-1 absolute w-full h-full items-center justify-center;
-}
-
-.card-image-wrapper .card-image-inner img {
-	height: auto;
-	max-width: 90%;
-	max-height: 90%;
-	width: auto;
-}
-
-.metadata {
-	white-space: pre-wrap;
-}
-
-.metafield-wrapper {
-	@apply flex flex-wrap py-1 font-mono;
-}
-
-.metafield-wrapper .metafield-label {
-	@apply font-bold;
-}
-
-.metafield-wrapper .ink-chip {
-	@apply text-xs px-2 py-1 rounded cursor-pointer border;
-}
-
-.metafield-wrapper .ink-chip:hover {
-	@apply underline bg-opacity-75;
-}
-
-.metafield-wrapper .dark-option:hover {
-	color: white !important;
-}
-
-.metafield-wrapper .light-option:hover {
-	color: black !important;
-}
-
-/* .close-icon:hover {
-  fill: var(--global-color); 
-} */
-
-/* .fullWidthImage {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  position: absolute;
-} */
-</style>
