@@ -22,32 +22,6 @@ html {
 	background-size: 16px 12px;
 }
 
-/* LINKS */
-p a,
-.artist a {
-	@apply underline;
-}
-
-p a:hover,
-a:hover {
-	color: var(--global-color);
-}
-
-button:hover svg,
-a:hover svg {
-	fill: var(--global-color);
-}
-
-/* Paragraph */
-
-p {
-	@apply pb-4;
-}
-
-p:last-child {
-	@apply pb-0;
-}
-
 body,
 .header,
 button {
