@@ -2,7 +2,10 @@
 	<section class="py-8">
 		<Html>
 			<Head>
-				<Title>Issue Press</Title>
+				<Title
+					>Issue Press – Limited-run Risograph artist books exploring humor,
+					history, and place</Title
+				>
 				<Meta
 					name="description"
 					content="Issue Press is a tiny publisher and Risograph print shop based in Grand Rapids, Michigan"
@@ -18,7 +21,10 @@
 		</Html>
 
 		<h1 class="sr-only">Issue Press</h1>
-
+		<p class="text-center mt-6">
+			Limited-run works by artists exploring humor, history, place, and beyond.
+		</p>
+		<h2 class="text-center">In Print</h2>
 		<FeaturedProducts collectionHandle="in-stock" :numberProducts="12" />
 	</section>
 </template>
