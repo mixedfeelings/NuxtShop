@@ -8,7 +8,8 @@
 .dark .print-docs-header,
 .dark .print-docs-body,
 .dark .print-docs aside,
-.dark section {
+.dark section,
+.dark footer {
 	@apply bg-darkest text-natural border-darker;
 }
 
