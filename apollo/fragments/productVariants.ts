@@ -6,6 +6,8 @@ export const productVariants = gql`
 			edges {
 				cursor
 				node {
+					weight
+					weightUnit
 					availableForSale
 					id
 					image {

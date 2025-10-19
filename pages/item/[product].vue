@@ -489,6 +489,7 @@ const meta_title = computed(() => {
 	return names ? `${product.value.title} by ${names}` : product.value.title;
 });
 
+// --- helpers ---
 function stripHtml(html?: string | null) {
 	if (!html) return "";
 	return html
@@ -499,17 +500,23 @@ function stripHtml(html?: string | null) {
 		.trim();
 }
 
-function availabilityFromVariant(v: any) {
-	if (v?.availableForSale && (v?.quantityAvailable ?? 0) > 0) {
-		return "https://schema.org/InStock";
+// map Shopify weight units → schema QuantitativeValue unitCode
+function schemaUnitFromShopify(unit?: string) {
+	switch ((unit || "").toUpperCase()) {
+		case "POUNDS":
+			return "LBR";
+		case "OUNCES":
+			return "ONZ";
+		case "KILOGRAMS":
+			return "KGM";
+		case "GRAMS":
+			return "GRM";
+		default:
+			return undefined;
 	}
-	if (v?.availableForSale && v?.currentlyNotInStock) {
-		return "https://schema.org/BackOrder";
-	}
-	return "https://schema.org/OutOfStock";
 }
 
-// Return multi-type for books so Product rich results still trigger
+// multi-type for books so Product rich results still trigger
 function productSchemaType(productType?: string): string | string[] {
 	if (!productType) return "Product";
 	const type = productType.toLowerCase();
@@ -523,6 +530,11 @@ function productSchemaType(productType?: string): string | string[] {
 	return "Product";
 }
 
+function isPrintType(productType?: string) {
+	const s = (productType || "").toLowerCase();
+	return s.includes("print") || s.includes("multiple");
+}
+
 const productUrlBase = computed(() => `https://issue.press${route.path}`);
 
 function offerUrlForVariant(variantId: string, idx: number) {
@@ -533,8 +545,7 @@ function offerUrlForVariant(variantId: string, idx: number) {
 }
 
 const imagesForSchema = computed(() => {
-	const arr = images.value?.map((e: any) => e?.node?.url).filter(Boolean) || [];
-	return arr;
+	return images.value?.map((e: any) => e?.node?.url).filter(Boolean) || [];
 });
 
 // Ensure price is "5.00" etc.
@@ -545,12 +556,34 @@ function toMoney(val?: string | number) {
 	return n.toFixed(2);
 }
 
+// availability (reflect your UI threshold)
+const LOW_STOCK_THRESHOLD = 10;
+function availabilityFromVariant(v: any) {
+	const qty = v?.quantityAvailable ?? 0;
+	if (v?.availableForSale && qty > LOW_STOCK_THRESHOLD) {
+		return "https://schema.org/InStock";
+	}
+	if (v?.availableForSale && qty > 0 && qty <= LOW_STOCK_THRESHOLD) {
+		return "https://schema.org/LimitedAvailability";
+	}
+	if (v?.availableForSale && v?.currentlyNotInStock) {
+		return "https://schema.org/BackOrder";
+	}
+	return "https://schema.org/OutOfStock";
+}
+
+// per-variant offers (adds shippingWeight/weight when available)
 const offersForSchema = computed(() => {
 	const edges = initialVariants.value || [];
 	if (!edges.length) return undefined;
 
 	return edges.map((edge: any, idx: number) => {
 		const v = edge.node;
+		const unit = schemaUnitFromShopify(v?.weightUnit);
+		const qv =
+			v?.weight && unit
+				? { "@type": "QuantitativeValue", value: v.weight, unitCode: unit }
+				: undefined;
 
 		return {
 			"@type": "Offer",
@@ -563,8 +596,12 @@ const offersForSchema = computed(() => {
 				v?.price?.amount ?? product.value?.priceRange?.minVariantPrice?.amount
 			),
 			availability: availabilityFromVariant(v),
-			sku: v?.sku || undefined,
+			sku: v?.sku || undefined, // doubles as MPN for prints/multiples
 			itemCondition: "https://schema.org/NewCondition",
+			shippingWeight: qv, // optional (good hygiene)
+			weight: qv, // optional (good hygiene)
+			// If you store GTIN/ISBN on variant:
+			// gtin13: v?.barcode || undefined
 		};
 	});
 });
@@ -599,6 +636,8 @@ const brandObj = computed(() => {
 	return { "@type": "Brand", name: vendor };
 });
 
+const productEntityId = computed(() => `${productUrlBase.value}#product`);
+
 const structuredData = computed(() => {
 	if (!product.value) return null;
 
@@ -611,16 +650,18 @@ const structuredData = computed(() => {
 	const base: any = {
 		"@context": "https://schema.org",
 		"@type": schemaType,
+		"@id": productEntityId.value,
 		name,
 		image: imagesForSchema.value,
 		description,
 		brand: brandObj.value,
 		url: productUrlBase.value,
-		// Intentionally omit top-level sku (keeps per-variant SKUs authoritative)
+		category: product.value?.productType || undefined,
+		// Intentionally omit top-level sku (keep per-variant SKUs authoritative)
 		offers: aggregateOffer.value || offersForSchema.value,
 	};
 
-	// Book-specific fields (still valid when multi-type ["Product","Book"])
+	// Book fields (still valid with ["Product","Book"])
 	const isBook = Array.isArray(schemaType)
 		? schemaType.includes("Book")
 		: schemaType === "Book";
@@ -634,8 +675,22 @@ const structuredData = computed(() => {
 			}));
 		}
 		if (year.value) base.datePublished = String(year.value);
-		// If you ever have one:
-		// base.isbn = product.value?.isbn || undefined;
+		// If you add one later:
+		// base.gtin13 = product.value?.metafields?.isbn?.value || undefined
+	}
+
+	// Prints / multiples enrichment
+	if (isPrintType(product.value.productType)) {
+		const t = base["@type"];
+		base["@type"] = Array.isArray(t)
+			? [...t, "VisualArtwork"]
+			: [t, "VisualArtwork"];
+		if (artist.value) base.artist = { "@type": "Person", name: artist.value };
+		if (process.value?.length) base.artMedium = process.value.join(", ");
+		if (editionSize.value?.length)
+			base.artEdition = editionSize.value.join(", ");
+		if (papers.value?.length) base.material = papers.value.join(", ");
+		base.artform = "Print";
 	}
 
 	return base;
